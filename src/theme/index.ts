@@ -6,6 +6,7 @@
  * font is San Francisco on iOS by default, so we never declare a fontFamily).
  */
 import { useColorScheme } from 'react-native';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -109,8 +110,13 @@ export const typography = {
   caption: { fontSize: 12, fontWeight: '400' as const },
 } as const;
 
-/** Resolve the active palette from the OS appearance setting. */
+/**
+ * Resolve the active palette. Honors the user's theme preference
+ * ('system' | 'light' | 'dark'); falls back to the OS appearance.
+ */
 export function usePalette(): { scheme: ColorScheme; colors: Palette } {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const system = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const preference = useSettingsStore((s) => s.theme);
+  const scheme: ColorScheme = preference === 'system' ? system : preference;
   return { scheme, colors: palettes[scheme] };
 }

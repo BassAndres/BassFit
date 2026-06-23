@@ -10,8 +10,10 @@ import { StatPill } from '@/components/StatPill';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { usePalette, spacing, typography } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { getWorkout, deleteWorkout } from '@/services/workoutRepository';
 import { formatDate, formatDuration, formatVolume } from '@/utils/format';
+import { formatWeight } from '@/utils/units';
 import type { Workout } from '@/types/models';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -24,6 +26,7 @@ export function WorkoutDetailScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Rt>();
   const uid = useAuthStore((s) => s.user?.uid);
+  const unit = useSettingsStore((s) => s.unit);
 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +79,7 @@ export function WorkoutDetailScreen() {
         <StatPill label="Volumen" value={formatVolume(workout.totals.volumeKg)} />
         <StatPill label="Series" value={String(workout.totals.setCount)} />
         <StatPill label="Duración" value={formatDuration(workout.totals.durationSeconds)} />
-        <StatPill label="Mejor 1RM" value={`${workout.totals.bestEstimated1RM}kg`} />
+        <StatPill label="Mejor 1RM" value={formatWeight(workout.totals.bestEstimated1RM, unit)} />
       </View>
 
       {workout.exercises.map((ex) => (
@@ -87,10 +90,10 @@ export function WorkoutDetailScreen() {
               <View key={s.id} style={styles.setRow}>
                 <Text style={[styles.setNo, { color: colors.secondaryLabel }]}>{s.setNumber}</Text>
                 <Text style={[styles.setVal, { color: colors.label }]}>
-                  {s.weightKg} kg × {s.achievedReps}
+                  {formatWeight(s.weightKg, unit)} × {s.achievedReps}
                 </Text>
                 <Text style={[styles.setMeta, { color: colors.tertiaryLabel }]}>
-                  RIR {s.rir} · 1RM {s.estimated1RM}kg
+                  RIR {s.rir} · 1RM {formatWeight(s.estimated1RM, unit)}
                 </Text>
               </View>
             ))}

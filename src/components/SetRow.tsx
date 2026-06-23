@@ -1,52 +1,71 @@
 /**
  * A single editable set row inside an exercise card.
- * Columns: set #, weight (kg), reps, RIR, and a complete toggle.
- * Numeric fields are inline-editable; the toggle fires haptics in the parent.
+ * Columns: set # (+ type badge), weight, reps, RIR, and a complete toggle.
+ *
+ * Weight is shown/edited in the user's display unit but reported back in kg.
+ * Tap the set number to cycle its type (normal → warmup → drop → failure);
+ * long-press it to remove the set.
  */
 import React from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { usePalette, spacing, radius, typography } from '@/theme';
+import { toDisplayWeight, fromDisplayWeight, type WeightUnit } from '@/utils/units';
+import { SET_TYPE_BADGE } from '@/utils/labels';
 import type { SetLog } from '@/types/models';
 
 interface SetRowProps {
   set: SetLog;
+  unit: WeightUnit;
   onChange: (patch: Partial<SetLog>) => void;
   onToggleComplete: () => void;
+  onCycleType: () => void;
+  onRemove: () => void;
 }
 
-export function SetRow({ set, onChange, onToggleComplete }: SetRowProps) {
+export function SetRow({ set, unit, onChange, onToggleComplete, onCycleType, onRemove }: SetRowProps) {
   const { colors } = usePalette();
 
-  const cellInput = (
+  const typeColor =
+    set.type === 'warmup'
+      ? colors.warning
+      : set.type === 'dropset'
+      ? colors.tint
+      : set.type === 'failure'
+      ? colors.danger
+      : colors.secondaryLabel;
+
+  const numeric = (
     value: number,
-    key: 'weightKg' | 'achievedReps' | 'rir'
+    key: 'weightKg' | 'achievedReps' | 'rir',
+    displayValue: number
   ) => (
     <TextInput
+      key={`${key}-${set.id}-${value}`}
       style={[styles.input, { color: colors.label, backgroundColor: colors.surfaceSecondary }]}
       keyboardType="decimal-pad"
-      defaultValue={String(value)}
+      defaultValue={String(displayValue)}
       selectTextOnFocus
       onEndEditing={(e) => {
         const parsed = parseFloat(e.nativeEvent.text.replace(',', '.'));
-        onChange({ [key]: Number.isFinite(parsed) ? parsed : 0 });
+        const safe = Number.isFinite(parsed) ? parsed : 0;
+        if (key === 'weightKg') onChange({ weightKg: fromDisplayWeight(safe, unit) });
+        else onChange({ [key]: safe });
       }}
       placeholderTextColor={colors.tertiaryLabel}
     />
   );
 
   return (
-    <View
-      style={[
-        styles.row,
-        set.completed && { backgroundColor: colors.success + '22' },
-      ]}
-    >
-      <Text style={[styles.setNo, { color: colors.secondaryLabel }]}>
-        {set.setNumber}
-      </Text>
-      {cellInput(set.weightKg, 'weightKg')}
-      {cellInput(set.achievedReps, 'achievedReps')}
-      {cellInput(set.rir, 'rir')}
+    <View style={[styles.row, set.completed && { backgroundColor: colors.success + '22' }]}>
+      <Pressable onPress={onCycleType} onLongPress={onRemove} hitSlop={6} style={styles.numCell}>
+        <Text style={[styles.setNo, { color: colors.secondaryLabel }]}>{set.setNumber}</Text>
+        {SET_TYPE_BADGE[set.type] !== '' && (
+          <Text style={[styles.badge, { color: typeColor }]}>{SET_TYPE_BADGE[set.type]}</Text>
+        )}
+      </Pressable>
+      {numeric(set.weightKg, 'weightKg', toDisplayWeight(set.weightKg, unit))}
+      {numeric(set.achievedReps, 'achievedReps', set.achievedReps)}
+      {numeric(set.rir, 'rir', set.rir)}
       <Pressable
         onPress={onToggleComplete}
         style={[
@@ -73,12 +92,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     gap: spacing.sm,
   },
-  setNo: {
-    width: 24,
-    textAlign: 'center',
-    ...typography.subhead,
-    fontWeight: '600',
-  },
+  numCell: { width: 24, alignItems: 'center' },
+  setNo: { ...typography.subhead, fontWeight: '600' },
+  badge: { ...typography.caption, fontWeight: '800', marginTop: -2 },
   input: {
     flex: 1,
     textAlign: 'center',
@@ -95,9 +111,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkMark: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
-  },
+  checkMark: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
 });

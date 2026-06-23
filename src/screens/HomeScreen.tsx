@@ -8,6 +8,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 
+import { Alert } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { GlassCard } from '@/components/GlassCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -26,6 +27,7 @@ export function HomeScreen() {
   const { colors } = usePalette();
   const navigation = useNavigation<Nav>();
   const user = useAuthStore((s) => s.user);
+  const active = useWorkoutStore((s) => s.current);
   const startWorkout = useWorkoutStore((s) => s.startWorkout);
   const startFromRoutine = useWorkoutStore((s) => s.startFromRoutine);
 
@@ -54,9 +56,19 @@ export function HomeScreen() {
   );
 
   const beginEmpty = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    startWorkout('Sesión de hoy');
-    navigation.navigate('LiveWorkout');
+    const launch = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      startWorkout('Sesión de hoy');
+      navigation.navigate('LiveWorkout');
+    };
+    if (active) {
+      Alert.alert('Sesión en curso', 'Ya tienes un entrenamiento activo. ¿Descartarlo y empezar uno nuevo?', [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Empezar nuevo', style: 'destructive', onPress: launch },
+      ]);
+      return;
+    }
+    launch();
   };
 
   const beginRoutine = (routine: Routine) => {
@@ -71,6 +83,22 @@ export function HomeScreen() {
     <Screen title="Inicio">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={[styles.greeting, { color: colors.secondaryLabel }]}>{greeting}</Text>
+
+        {active && (
+          <Pressable onPress={() => navigation.navigate('LiveWorkout')}>
+            <GlassCard intensity={32} style={styles.resumeCard}>
+              <View style={styles.resumeInner}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.resumeTitle, { color: colors.label }]}>Entrenamiento en curso</Text>
+                  <Text style={[styles.resumeMeta, { color: colors.secondaryLabel }]} numberOfLines={1}>
+                    {active.name} · {active.exercises.length} ejercicios
+                  </Text>
+                </View>
+                <Text style={[styles.resumeCta, { color: colors.tint }]}>Continuar ›</Text>
+              </View>
+            </GlassCard>
+          </Pressable>
+        )}
 
         <PrimaryButton label="Empezar entrenamiento vacío" onPress={beginEmpty} />
 
@@ -129,6 +157,11 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxxl },
   greeting: { ...typography.body },
+  resumeCard: {},
+  resumeInner: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, gap: spacing.md },
+  resumeTitle: { ...typography.headline },
+  resumeMeta: { ...typography.footnote, marginTop: 2 },
+  resumeCta: { ...typography.body, fontWeight: '600' },
   section: { ...typography.title3, marginTop: spacing.lg },
   muted: { ...typography.subhead },
   routineCard: { marginBottom: spacing.xs },

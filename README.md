@@ -7,21 +7,32 @@ Construido con **Expo + React Native + TypeScript**, **Firebase** (Firestore +
 Auth), **Zustand**, **Reanimated**, **@gorhom/bottom-sheet**, **expo-blur** y
 **expo-haptics**.
 
+📘 **Manual de usuario completo:** [`MANUAL.md`](./MANUAL.md)
+
 ## Características
 
 - **Autenticación**: email/contraseña + modo invitado (anónimo), con sesión
   persistente (AsyncStorage).
-- **Navegación por tabs**: Inicio · Historial · Rutinas · Perfil.
+- **Navegación por tabs**: Inicio · Historial · Ejercicios · Rutinas · Perfil.
 - **Live Workout Tracker** con tarjetas glassmorphism (light/dark automático),
-  bottom sheet con físicas reales para añadir ejercicios y haptics en cada serie.
-- **Coach Inteligente**: tras cada serie, sugiere subir/mantener/bajar carga
-  según reps logradas vs. objetivo y RIR (`useProgressiveOverload`).
-- **Temporizador de descanso** flotante con +15s / saltar y barra de progreso.
-- **Rutinas**: crear, editar e iniciar una sesión pre-poblada desde una rutina.
+  bottom sheet con físicas reales y haptics en cada serie.
+- **Coach Inteligente** (`useProgressiveOverload`): sube/mantiene/baja carga
+  según reps logradas vs. objetivo y RIR, con incremento exacto.
+- **Récords personales (PR)** con felicitación en vivo al superar 1RM o peso máx.
+- **Temporizador de descanso** flotante (+15s / saltar) con arranque automático.
+- **Calculadora de discos**, **calentamiento automático** (rampa 50/70/85 %),
+  **tipos de serie** (normal/calentamiento/drop/fallo), **reordenar** y **notas**.
+- **Unidades kg/lb**, **tema** claro/oscuro/sistema, **haptics** y descanso
+  configurables (persistidos).
+- **Reanudar sesión**: el entrenamiento activo sobrevive al cierre de la app.
+- **Rutinas**: crear, editar e iniciar una sesión pre-poblada.
+- **Ejercicios**: catálogo + **ejercicios personalizados** + **progreso por
+  ejercicio** (récords, gráfica de 1RM, historial).
 - **Historial** persistido en Firestore, con detalle por serie y borrado.
-- **Perfil** con agregados de por vida (volumen, series, mejor 1RM) y gráfico
-  de volumen por sesión.
+- **Perfil**: agregados de por vida, volumen por sesión y **por músculo**.
+- **Peso corporal**: registro, tendencia y borrado.
 - Cálculo de 1RM (Epley), volumen y mejores marcas por sesión.
+- **Tests** (`npm test`) del motor de sobrecarga, matemática de fuerza y récords.
 
 ## Puesta en marcha
 

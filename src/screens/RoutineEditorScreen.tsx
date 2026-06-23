@@ -1,41 +1,27 @@
 /**
- * Create / edit a routine template. Add movements from the catalog via the
- * bottom sheet, tune sets / target reps / rest per exercise, then save to
+ * Create / edit a routine template. Add movements via the shared exercise
+ * picker, tune sets / target reps / RIR / rest per exercise, then save to
  * Firestore. Sets within an exercise share the same target for simplicity.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
-import {
-  BottomSheetModal,
-  BottomSheetBackdrop,
-  BottomSheetView,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
 
 import { GlassCard } from '@/components/GlassCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { ExercisePickerSheet, type ExercisePickerSheetRef } from '@/components/ExercisePickerSheet';
 import { usePalette, spacing, radius, typography } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
+import { useHaptics } from '@/hooks/useHaptics';
 import { listRoutines, upsertRoutine } from '@/services/routineRepository';
-import { EXERCISE_CATALOG } from '@/data/exerciseCatalog';
 import type { Exercise, Routine, RoutineExercise, RoutineSet } from '@/types/models';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'RoutineEditor'>;
 type Rt = RouteProp<RootStackParamList, 'RoutineEditor'>;
 
-/** Flattened editing model — sets share one target. */
 interface DraftExercise {
   exerciseId: string;
   exerciseName: string;
@@ -57,6 +43,7 @@ export function RoutineEditorScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Rt>();
+  const haptics = useHaptics();
   const uid = useAuthStore((s) => s.user?.uid);
   const editingId = route.params?.routineId;
 
@@ -65,7 +52,8 @@ export function RoutineEditorScreen() {
   const [createdAt, setCreatedAt] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Hydrate when editing an existing routine.
+  const pickerRef = useRef<ExercisePickerSheetRef>(null);
+
   useEffect(() => {
     let active = true;
     if (!uid || !editingId) return;
@@ -91,18 +79,7 @@ export function RoutineEditorScreen() {
     };
   }, [uid, editingId]);
 
-  // Bottom sheet for picking exercises.
-  const sheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ['55%', '90%'], []);
-  const renderBackdrop = useCallback(
-    (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
-      <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.4} />
-    ),
-    []
-  );
-
   const addExercise = (ex: Exercise) => {
-    Haptics.selectionAsync();
     setItems((prev) =>
       prev.some((p) => p.exerciseId === ex.id)
         ? prev
@@ -119,18 +96,14 @@ export function RoutineEditorScreen() {
             },
           ]
     );
-    sheetRef.current?.dismiss();
   };
 
   const patch = (id: string, p: Partial<DraftExercise>) =>
     setItems((prev) => prev.map((it) => (it.exerciseId === id ? { ...it, ...p } : it)));
-
-  const remove = (id: string) =>
-    setItems((prev) => prev.filter((it) => it.exerciseId !== id));
+  const remove = (id: string) => setItems((prev) => prev.filter((it) => it.exerciseId !== id));
 
   const onSave = async () => {
-    if (!uid) return;
-    if (!name.trim()) return;
+    if (!uid || !name.trim()) return;
     setSaving(true);
     const now = Date.now();
     const exercises: RoutineExercise[] = items.map((it) => {
@@ -158,9 +131,9 @@ export function RoutineEditorScreen() {
     };
     try {
       await upsertRoutine(routine);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      haptics.success();
     } catch {
-      /* surfaced as a no-op; offline persistence still cached by Firestore */
+      /* offline cache still applies */
     } finally {
       setSaving(false);
       navigation.goBack();
@@ -205,7 +178,7 @@ export function RoutineEditorScreen() {
         />
 
         {items.map((it) => (
-          <GlassCard key={it.exerciseId} intensity={28} style={styles.card}>
+          <GlassCard key={it.exerciseId} intensity={28}>
             <View style={styles.cardInner}>
               <View style={styles.exHeader}>
                 <Text style={[styles.exName, { color: colors.label }]}>{it.exerciseName}</Text>
@@ -250,43 +223,14 @@ export function RoutineEditorScreen() {
           label="＋ Añadir ejercicio"
           variant="tinted"
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            sheetRef.current?.present();
+            haptics.light();
+            pickerRef.current?.present();
           }}
           style={styles.addBtn}
         />
       </ScrollView>
 
-      <BottomSheetModal
-        ref={sheetRef}
-        snapPoints={snapPoints}
-        index={0}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        handleIndicatorStyle={{ backgroundColor: colors.tertiaryLabel }}
-        backgroundStyle={{ backgroundColor: colors.surface }}
-      >
-        <BottomSheetView style={styles.sheetHeader}>
-          <Text style={[styles.sheetTitle, { color: colors.label }]}>Añadir ejercicio</Text>
-        </BottomSheetView>
-        <BottomSheetFlatList
-          data={EXERCISE_CATALOG}
-          keyExtractor={(item: Exercise) => item.id}
-          contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
-          ItemSeparatorComponent={() => <View style={[styles.sep, { backgroundColor: colors.separator }]} />}
-          renderItem={({ item }: { item: Exercise }) => (
-            <Pressable style={styles.pickRow} onPress={() => addExercise(item)}>
-              <View>
-                <Text style={[styles.pickName, { color: colors.label }]}>{item.name}</Text>
-                <Text style={[styles.pickMeta, { color: colors.secondaryLabel }]}>
-                  {item.primaryMuscle} · {item.equipment}
-                </Text>
-              </View>
-              <Text style={[styles.pickAdd, { color: colors.tint }]}>＋</Text>
-            </Pressable>
-          )}
-        />
-      </BottomSheetModal>
+      <ExercisePickerSheet ref={pickerRef} onPick={addExercise} />
     </View>
   );
 }
@@ -320,7 +264,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     ...typography.body,
   },
-  card: {},
   cardInner: { padding: spacing.lg, gap: spacing.sm },
   exHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   exName: { ...typography.headline, flex: 1 },
@@ -332,17 +275,4 @@ const styles = StyleSheet.create({
   stepText: { fontSize: 20, fontWeight: '600' },
   stepValue: { ...typography.headline, minWidth: 36, textAlign: 'center' },
   addBtn: { marginTop: spacing.sm },
-  sheetHeader: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
-  sheetTitle: { ...typography.title3 },
-  sep: { height: StyleSheet.hairlineWidth, marginLeft: spacing.lg },
-  pickRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  pickName: { ...typography.body, fontWeight: '600' },
-  pickMeta: { ...typography.footnote, marginTop: 2, textTransform: 'capitalize' },
-  pickAdd: { fontSize: 24 },
 });

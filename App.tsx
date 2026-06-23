@@ -26,17 +26,27 @@ import {
 import { RootNavigator } from '@/navigation';
 import { AuthScreen } from '@/screens/AuthScreen';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useCatalogStore } from '@/store/catalogStore';
 import { palettes } from '@/theme';
 
 export default function App() {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const system = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const themePref = useSettingsStore((s) => s.theme);
+  const scheme = themePref === 'system' ? system : themePref;
   const colors = palettes[scheme];
 
   const user = useAuthStore((s) => s.user);
   const initializing = useAuthStore((s) => s.initializing);
   const init = useAuthStore((s) => s.init);
+  const loadCatalog = useCatalogStore((s) => s.load);
 
   useEffect(() => init(), [init]);
+
+  // Warm the exercise catalog (seed + custom) once the user is known.
+  useEffect(() => {
+    if (user?.uid) loadCatalog(user.uid);
+  }, [user?.uid, loadCatalog]);
 
   const navTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
   const themed = {

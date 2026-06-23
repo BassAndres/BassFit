@@ -4,6 +4,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 export type TabParamList = {
   Home: undefined;
   History: undefined;
+  Exercises: undefined;
   Routines: undefined;
   Profile: undefined;
 };
@@ -13,4 +14,7 @@ export type RootStackParamList = {
   LiveWorkout: undefined;
   WorkoutDetail: { workoutId: string };
   RoutineEditor: { routineId?: string } | undefined;
+  ExerciseDetail: { exerciseId: string; exerciseName: string };
+  Bodyweight: undefined;
+  Settings: undefined;
 };
