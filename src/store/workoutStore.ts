@@ -15,6 +15,7 @@
 import { create } from 'zustand';
 import type {
   Exercise,
+  Routine,
   SetLog,
   SetType,
   Workout,
@@ -53,6 +54,8 @@ interface WorkoutState {
   lastCompletedSet: SetLog | null;
 
   startWorkout: (name?: string, routineId?: string) => void;
+  /** Start a session pre-populated from a routine template. */
+  startFromRoutine: (routine: Routine) => void;
   addExercise: (exercise: Exercise, restSeconds?: number) => void;
   removeExercise: (exerciseId: string) => void;
   addSet: (exerciseId: string, draft: DraftSet) => void;
@@ -78,6 +81,40 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
         routineId,
         startedAt: Date.now(),
         exercises: [],
+      },
+      lastCompletedSet: null,
+    });
+  },
+
+  startFromRoutine: (routine) => {
+    const exercises: WorkoutExercise[] = routine.exercises.map((re) => ({
+      exerciseId: re.exerciseId,
+      exerciseName: re.exerciseName,
+      primaryMuscle: re.primaryMuscle,
+      restSeconds: re.restSeconds,
+      sets: re.sets.map((rs) => {
+        const weightKg = rs.suggestedWeightKg ?? 0;
+        return {
+          id: localId('set'),
+          setNumber: rs.setNumber,
+          type: rs.type,
+          weightKg,
+          targetReps: rs.targetReps,
+          achievedReps: rs.targetReps,
+          rir: rs.targetRir ?? 2,
+          rpe: 10 - (rs.targetRir ?? 2),
+          estimated1RM: estimate1RM(weightKg, rs.targetReps),
+          completed: false,
+        };
+      }),
+    }));
+    set({
+      current: {
+        id: localId('wk'),
+        name: routine.name,
+        routineId: routine.id,
+        startedAt: Date.now(),
+        exercises,
       },
       lastCompletedSet: null,
     });
