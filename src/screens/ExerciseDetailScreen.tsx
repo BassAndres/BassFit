@@ -15,6 +15,8 @@ import { StatPill } from '@/components/StatPill';
 import { BarChart, type BarDatum } from '@/components/BarChart';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { MuscleMap } from '@/components/MuscleMap';
+import { MuscleModel3D } from '@/components/MuscleModel3D';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { usePalette, spacing, typography } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -89,7 +91,14 @@ export function ExerciseDetailScreen() {
         <GlassCard intensity={26} style={styles.block}>
           <View style={styles.blockInner}>
             <Text style={[styles.section, { color: colors.label }]}>Músculos implicados</Text>
-            <MuscleMap primary={exercise.primaryMuscle} secondary={exercise.secondaryMuscles} />
+            <ErrorBoundary
+              fallback={<MuscleMap primary={exercise.primaryMuscle} secondary={exercise.secondaryMuscles} />}
+            >
+              <MuscleModel3D primary={exercise.primaryMuscle} secondary={exercise.secondaryMuscles} />
+            </ErrorBoundary>
+            <Text style={[styles.caption, { color: colors.tertiaryLabel }]}>
+              Modelo 3D — el músculo trabajado se ilumina y gira automáticamente
+            </Text>
             <View style={styles.legend}>
               <View style={styles.legendItem}>
                 <View style={[styles.dot, { backgroundColor: colors.tint }]} />
@@ -196,6 +205,7 @@ const styles = StyleSheet.create({
   block: { marginTop: spacing.xs },
   blockInner: { padding: spacing.lg, gap: spacing.sm },
   section: { ...typography.headline },
+  caption: { ...typography.caption, textAlign: 'center', marginTop: spacing.xs },
   legend: { gap: spacing.xs, marginTop: spacing.xs },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   dot: { width: 12, height: 12, borderRadius: 6 },

@@ -26,8 +26,10 @@ Auth), **Zustand**, **Reanimated**, **@gorhom/bottom-sheet**, **expo-blur** y
   configurables (persistidos).
 - **Reanudar sesión**: el entrenamiento activo sobrevive al cierre de la app.
 - **Rutinas**: crear, editar e iniciar una sesión pre-poblada.
-- **Ejercicios**: catálogo + **ejercicios personalizados** + **progreso por
-  ejercicio** (récords, gráfica de 1RM, historial).
+- **Ejercicios**: catálogo amplio (~85) con pasos, técnica y "dónde sentirlo",
+  **modelo 3D** del músculo trabajado (expo-gl + three.js/React Three Fiber, con
+  fallback a un mapa 2D animado en SVG), **ejercicios personalizados** y
+  **progreso por ejercicio** (récords, gráfica de 1RM, historial).
 - **Historial** persistido en Firestore, con detalle por serie y borrado.
 - **Perfil**: agregados de por vida, volumen por sesión y **por músculo**.
 - **Peso corporal**: registro, tendencia y borrado.
