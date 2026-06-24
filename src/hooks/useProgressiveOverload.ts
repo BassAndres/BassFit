@@ -61,7 +61,7 @@ export function evaluateOverload(set: OverloadInput): OverloadSuggestion {
     const deltaKg = snapIncrement(weightKg, rawDelta);
     return {
       action: 'increase',
-      title: 'Sube el peso 💪',
+      title: 'Sube el peso',
       detail: `Lograste ${achievedReps} reps con ${rir} en reserva. Aumenta +${deltaKg}kg en la siguiente serie.`,
       nextWeightKg: round2(weightKg + deltaKg),
       deltaKg,

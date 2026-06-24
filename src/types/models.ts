@@ -41,8 +41,14 @@ export interface Exercise {
   primaryMuscle: MuscleGroup;
   secondaryMuscles: MuscleGroup[];
   equipment: Equipment;
-  /** Optional how-to / cue text. */
+  /** Optional one-line summary. */
   instructions?: string;
+  /** Step-by-step execution (how to perform the movement). */
+  steps?: string[];
+  /** Technique cues to do it correctly and safely. */
+  cues?: string[];
+  /** Where the athlete should feel the work (target sensation). */
+  feelIn?: string;
   /** True for user-created movements (vs. the curated catalog). */
   isCustom?: boolean;
 }

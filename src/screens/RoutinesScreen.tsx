@@ -1,12 +1,15 @@
 /** List of routine templates, with create + delete. */
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { Screen } from '@/components/Screen';
 import { GlassCard } from '@/components/GlassCard';
+import { SwipeableRow } from '@/components/SwipeableRow';
 import { usePalette, spacing, typography } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
 import { listRoutines, deleteRoutine } from '@/services/routineRepository';
@@ -43,19 +46,14 @@ export function RoutinesScreen() {
     }, [load])
   );
 
-  const onDelete = (r: Routine) => {
-    Alert.alert('Eliminar rutina', `¿Borrar "${r.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: async () => {
-          if (!uid) return;
-          await deleteRoutine(uid, r.id);
-          load();
-        },
-      },
-    ]);
+  const removeRoutine = async (r: Routine) => {
+    if (!uid) return;
+    setRoutines((prev) => prev.filter((x) => x.id !== r.id));
+    try {
+      await deleteRoutine(uid, r.id);
+    } catch {
+      load();
+    }
   };
 
   return (
@@ -68,8 +66,10 @@ export function RoutinesScreen() {
             navigation.navigate('RoutineEditor', undefined);
           }}
           hitSlop={8}
+          style={styles.addRow}
         >
-          <Text style={[styles.add, { color: colors.tint }]}>＋ Nueva</Text>
+          <Ionicons name="add-circle" size={20} color={colors.tint} />
+          <Text style={[styles.add, { color: colors.tint }]}>Nueva</Text>
         </Pressable>
       }
     >
@@ -83,24 +83,26 @@ export function RoutinesScreen() {
             </Text>
           )}
           {routines.map((r) => (
-            <Pressable
+            <Animated.View
               key={r.id}
-              onPress={() => navigation.navigate('RoutineEditor', { routineId: r.id })}
-              onLongPress={() => onDelete(r)}
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(180)}
+              layout={LinearTransition.springify().damping(18)}
             >
-              <GlassCard intensity={28} style={styles.card}>
-                <View style={styles.cardInner}>
-                  <Text style={[styles.name, { color: colors.label }]}>{r.name}</Text>
-                  <Text style={[styles.meta, { color: colors.secondaryLabel }]}>
-                    {r.exercises.length} ejercicios ·{' '}
-                    {r.exercises.reduce((n, e) => n + e.sets.length, 0)} series
-                  </Text>
-                  <Text style={[styles.hint, { color: colors.tertiaryLabel }]}>
-                    Mantén pulsado para eliminar
-                  </Text>
-                </View>
-              </GlassCard>
-            </Pressable>
+              <SwipeableRow onDelete={() => removeRoutine(r)}>
+                <Pressable onPress={() => navigation.navigate('RoutineEditor', { routineId: r.id })}>
+                  <GlassCard intensity={28} style={styles.card}>
+                    <View style={styles.cardInner}>
+                      <Text style={[styles.name, { color: colors.label }]}>{r.name}</Text>
+                      <Text style={[styles.meta, { color: colors.secondaryLabel }]}>
+                        {r.exercises.length} ejercicios ·{' '}
+                        {r.exercises.reduce((n, e) => n + e.sets.length, 0)} series
+                      </Text>
+                    </View>
+                  </GlassCard>
+                </Pressable>
+              </SwipeableRow>
+            </Animated.View>
           ))}
         </ScrollView>
       )}
@@ -109,6 +111,7 @@ export function RoutinesScreen() {
 }
 
 const styles = StyleSheet.create({
+  addRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   add: { ...typography.body, fontWeight: '600' },
   list: { padding: spacing.lg, gap: spacing.sm, paddingBottom: spacing.xxxl },
   empty: { ...typography.body, textAlign: 'center', marginTop: spacing.xxxl, paddingHorizontal: spacing.xl },

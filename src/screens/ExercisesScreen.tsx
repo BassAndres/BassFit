@@ -3,6 +3,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, FlatList } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Screen } from '@/components/Screen';
 import { usePalette, spacing, radius, typography } from '@/theme';
@@ -96,7 +97,7 @@ export function ExercisesScreen() {
                 {MUSCLE_LABEL[item.primaryMuscle]} · {EQUIPMENT_LABEL[item.equipment]}
               </Text>
             </View>
-            <Text style={[styles.chevron, { color: colors.tertiaryLabel }]}>›</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
           </Pressable>
         )}
       />

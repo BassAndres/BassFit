@@ -114,7 +114,7 @@ export function ProfileScreen() {
             <View style={styles.linkInner}>
               <Ionicons name="body-outline" size={22} color={colors.tint} />
               <Text style={[styles.linkText, { color: colors.label }]}>Peso corporal</Text>
-              <Text style={[styles.chevron, { color: colors.tertiaryLabel }]}>›</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
             </View>
           </GlassCard>
         </Pressable>

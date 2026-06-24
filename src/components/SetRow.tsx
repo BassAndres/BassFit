@@ -8,6 +8,7 @@
  */
 import React from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { usePalette, spacing, radius, typography } from '@/theme';
 import { toDisplayWeight, fromDisplayWeight, type WeightUnit } from '@/utils/units';
 import { SET_TYPE_BADGE } from '@/utils/labels';
@@ -77,7 +78,7 @@ export function SetRow({ set, unit, onChange, onToggleComplete, onCycleType, onR
         ]}
         hitSlop={8}
       >
-        <Text style={[styles.checkMark, { opacity: set.completed ? 1 : 0 }]}>✓</Text>
+        <Ionicons name="checkmark" size={18} color="#FFFFFF" style={{ opacity: set.completed ? 1 : 0 }} />
       </Pressable>
     </View>
   );

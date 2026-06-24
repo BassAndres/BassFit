@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/Screen';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { usePalette, spacing, radius, typography } from '@/theme';
@@ -29,6 +30,7 @@ export function AuthScreen() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -84,7 +86,26 @@ export function AuthScreen() {
 
           {mode === 'signUp' && input('Nombre', name, setName)}
           {input('Email', email, setEmail, { email: true })}
-          {input('Contraseña', password, setPassword, { secure: true })}
+
+          <View style={[styles.passwordRow, { backgroundColor: colors.surface, borderColor: colors.separator }]}>
+            <TextInput
+              style={[styles.passwordInput, { color: colors.label }]}
+              placeholder="Contraseña"
+              placeholderTextColor={colors.tertiaryLabel}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={10} style={styles.eyeBtn}>
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color={colors.secondaryLabel}
+              />
+            </Pressable>
+          </View>
 
           {error && <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>}
 
@@ -148,6 +169,20 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     ...typography.body,
   },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingRight: spacing.md,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    ...typography.body,
+  },
+  eyeBtn: { padding: spacing.xs },
   error: { ...typography.footnote, textAlign: 'center' },
   cta: { marginTop: spacing.sm },
   switch: { alignItems: 'center', paddingVertical: spacing.sm },

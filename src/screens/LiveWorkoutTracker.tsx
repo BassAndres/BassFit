@@ -17,7 +17,9 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { usePalette, spacing, radius, typography } from '@/theme';
 import { GlassCard } from '@/components/GlassCard';
@@ -191,7 +193,7 @@ export function LiveWorkoutTracker() {
             await saveWorkout(workout);
             haptics.success();
             Alert.alert(
-              '¡Sesión guardada! 🎉',
+              '¡Sesión guardada!',
               `Volumen: ${formatVolume(workout.totals.volumeKg)}\n` +
                 `Series: ${workout.totals.setCount}\n` +
                 `Mejor 1RM est.: ${formatWeight(workout.totals.bestEstimated1RM, unit)}`
@@ -277,28 +279,31 @@ export function LiveWorkoutTracker() {
         <CoachBanner suggestion={suggestion} onDismiss={clearCoach} />
 
         {current.exercises.map((ex, index) => (
-          <View key={ex.exerciseId} style={styles.cardWrap}>
+          <Animated.View
+            key={ex.exerciseId}
+            style={styles.cardWrap}
+            entering={FadeIn.duration(220)}
+            exiting={FadeOut.duration(180)}
+            layout={LinearTransition.springify().damping(18)}
+          >
             <GlassCard intensity={30}>
               <View style={styles.cardInner}>
                 <View style={styles.exerciseHeader}>
                   <Text style={[styles.exerciseName, { color: colors.label }]}>{ex.exerciseName}</Text>
                   <View style={styles.exerciseTools}>
                     <Pressable onPress={() => moveExercise(ex.exerciseId, 'up')} disabled={index === 0} hitSlop={6}>
-                      <Text style={[styles.tool, { color: index === 0 ? colors.tertiaryLabel : colors.tint }]}>▲</Text>
+                      <Ionicons name="chevron-up" size={18} color={index === 0 ? colors.tertiaryLabel : colors.tint} />
                     </Pressable>
                     <Pressable
                       onPress={() => moveExercise(ex.exerciseId, 'down')}
                       disabled={index === current.exercises.length - 1}
                       hitSlop={6}
                     >
-                      <Text
-                        style={[
-                          styles.tool,
-                          { color: index === current.exercises.length - 1 ? colors.tertiaryLabel : colors.tint },
-                        ]}
-                      >
-                        ▼
-                      </Text>
+                      <Ionicons
+                        name="chevron-down"
+                        size={18}
+                        color={index === current.exercises.length - 1 ? colors.tertiaryLabel : colors.tint}
+                      />
                     </Pressable>
                     <Pressable onPress={() => removeExercise(ex.exerciseId)} hitSlop={6}>
                       <Text style={[styles.removeX, { color: colors.danger }]}>Quitar</Text>
@@ -315,18 +320,24 @@ export function LiveWorkoutTracker() {
                 </View>
 
                 {ex.sets.map((s) => (
-                  <SetRow
+                  <Animated.View
                     key={s.id}
-                    set={s}
-                    unit={unit}
-                    onChange={(patch) => updateSet(ex.exerciseId, s.id, patch)}
-                    onToggleComplete={() => onCompleteSet(ex, s.id)}
-                    onCycleType={() => {
-                      haptics.selection();
-                      cycleSetType(ex.exerciseId, s.id);
-                    }}
-                    onRemove={() => removeSet(ex.exerciseId, s.id)}
-                  />
+                    entering={FadeIn.duration(180)}
+                    exiting={FadeOut.duration(150)}
+                    layout={LinearTransition.springify().damping(20)}
+                  >
+                    <SetRow
+                      set={s}
+                      unit={unit}
+                      onChange={(patch) => updateSet(ex.exerciseId, s.id, patch)}
+                      onToggleComplete={() => onCompleteSet(ex, s.id)}
+                      onCycleType={() => {
+                        haptics.selection();
+                        cycleSetType(ex.exerciseId, s.id);
+                      }}
+                      onRemove={() => removeSet(ex.exerciseId, s.id)}
+                    />
+                  </Animated.View>
                 ))}
 
                 <View style={styles.exerciseActions}>
@@ -347,7 +358,7 @@ export function LiveWorkoutTracker() {
                 />
               </View>
             </GlassCard>
-          </View>
+          </Animated.View>
         ))}
 
         {current.exercises.length === 0 && (
@@ -377,7 +388,7 @@ export function LiveWorkoutTracker() {
             }}
             style={[styles.plateBtn, { borderColor: colors.separator }]}
           >
-            <Text style={styles.plateEmoji}>🏋️</Text>
+            <Ionicons name="barbell-outline" size={24} color={colors.label} />
           </Pressable>
           <PrimaryButton
             label="Añadir ejercicio"

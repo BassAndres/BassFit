@@ -11,11 +11,13 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { Screen } from '@/components/Screen';
+import { SwipeableRow } from '@/components/SwipeableRow';
 import { usePalette, spacing, typography } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
-import { listWorkouts } from '@/services/workoutRepository';
+import { listWorkouts, deleteWorkout } from '@/services/workoutRepository';
 import { formatDate, formatDuration, formatVolume } from '@/utils/format';
 import type { Workout } from '@/types/models';
 import type { RootStackParamList } from '@/navigation/types';
@@ -57,6 +59,16 @@ export function HistoryScreen() {
     setRefreshing(false);
   };
 
+  const remove = async (id: string) => {
+    if (!uid) return;
+    setWorkouts((prev) => prev.filter((w) => w.id !== id));
+    try {
+      await deleteWorkout(uid, id);
+    } catch {
+      load();
+    }
+  };
+
   if (loading) {
     return (
       <Screen title="Historial">
@@ -78,24 +90,32 @@ export function HistoryScreen() {
           </Text>
         }
         renderItem={({ item }) => (
-          <Pressable
-            onPress={() => navigation.navigate('WorkoutDetail', { workoutId: item.id })}
-            style={[styles.row, { borderColor: colors.separator }]}
+          <Animated.View
+            entering={FadeIn.duration(220)}
+            exiting={FadeOut.duration(180)}
+            layout={LinearTransition.springify().damping(18)}
           >
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.name, { color: colors.label }]}>{item.name}</Text>
-              <Text style={[styles.meta, { color: colors.secondaryLabel }]}>
-                {formatDate(item.startedAt)} · {item.exercises.length} ejercicios ·{' '}
-                {formatDuration(item.totals.durationSeconds)}
-              </Text>
-            </View>
-            <View style={styles.volCol}>
-              <Text style={[styles.vol, { color: colors.label }]}>
-                {formatVolume(item.totals.volumeKg)}
-              </Text>
-              <Text style={[styles.volLabel, { color: colors.tertiaryLabel }]}>volumen</Text>
-            </View>
-          </Pressable>
+            <SwipeableRow onDelete={() => remove(item.id)}>
+              <Pressable
+                onPress={() => navigation.navigate('WorkoutDetail', { workoutId: item.id })}
+                style={[styles.row, { backgroundColor: colors.background, borderColor: colors.separator }]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.name, { color: colors.label }]}>{item.name}</Text>
+                  <Text style={[styles.meta, { color: colors.secondaryLabel }]}>
+                    {formatDate(item.startedAt)} · {item.exercises.length} ejercicios ·{' '}
+                    {formatDuration(item.totals.durationSeconds)}
+                  </Text>
+                </View>
+                <View style={styles.volCol}>
+                  <Text style={[styles.vol, { color: colors.label }]}>
+                    {formatVolume(item.totals.volumeKg)}
+                  </Text>
+                  <Text style={[styles.volLabel, { color: colors.tertiaryLabel }]}>volumen</Text>
+                </View>
+              </Pressable>
+            </SwipeableRow>
+          </Animated.View>
         )}
       />
     </Screen>

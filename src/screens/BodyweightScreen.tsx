@@ -4,8 +4,10 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { GlassCard } from '@/components/GlassCard';
+import { SwipeableRow } from '@/components/SwipeableRow';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { BarChart, type BarDatum } from '@/components/BarChart';
 import { usePalette, spacing, radius, typography } from '@/theme';
@@ -67,19 +69,14 @@ export function BodyweightScreen() {
     load();
   };
 
-  const onDelete = (entry: BodyweightEntry) => {
+  const onDelete = async (entry: BodyweightEntry) => {
     if (!uid) return;
-    Alert.alert('Eliminar registro', `${formatWeight(entry.weightKg, unit)} · ${formatDate(entry.recordedAt)}`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteBodyweight(uid, entry.id);
-          load();
-        },
-      },
-    ]);
+    setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+    try {
+      await deleteBodyweight(uid, entry.id);
+    } catch {
+      load();
+    }
   };
 
   const chart: BarDatum[] = [...entries]
@@ -130,18 +127,23 @@ export function BodyweightScreen() {
           </Text>
         ) : (
           entries.map((e) => (
-            <Pressable
+            <Animated.View
               key={e.id}
-              onLongPress={() => onDelete(e)}
-              style={[styles.row, { borderColor: colors.separator }]}
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(180)}
+              layout={LinearTransition.springify().damping(18)}
             >
-              <Text style={[styles.rowWeight, { color: colors.label }]}>{formatWeight(e.weightKg, unit)}</Text>
-              <Text style={[styles.rowDate, { color: colors.secondaryLabel }]}>{formatDate(e.recordedAt)}</Text>
-            </Pressable>
+              <SwipeableRow onDelete={() => onDelete(e)}>
+                <View style={[styles.row, { backgroundColor: colors.background, borderColor: colors.separator }]}>
+                  <Text style={[styles.rowWeight, { color: colors.label }]}>{formatWeight(e.weightKg, unit)}</Text>
+                  <Text style={[styles.rowDate, { color: colors.secondaryLabel }]}>{formatDate(e.recordedAt)}</Text>
+                </View>
+              </SwipeableRow>
+            </Animated.View>
           ))
         )}
         {entries.length > 0 && (
-          <Text style={[styles.hint, { color: colors.tertiaryLabel }]}>Mantén pulsado un registro para eliminarlo</Text>
+          <Text style={[styles.hint, { color: colors.tertiaryLabel }]}>Desliza un registro para eliminarlo</Text>
         )}
       </ScrollView>
     </View>

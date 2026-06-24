@@ -6,6 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Alert } from 'react-native';
@@ -94,7 +95,10 @@ export function HomeScreen() {
                     {active.name} · {active.exercises.length} ejercicios
                   </Text>
                 </View>
-                <Text style={[styles.resumeCta, { color: colors.tint }]}>Continuar ›</Text>
+                <View style={styles.resumeCtaWrap}>
+                  <Text style={[styles.resumeCta, { color: colors.tint }]}>Continuar</Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.tint} />
+                </View>
               </View>
             </GlassCard>
           </Pressable>
@@ -120,7 +124,7 @@ export function HomeScreen() {
                       {r.exercises.map((e) => e.exerciseName).join(' · ') || 'Sin ejercicios'}
                     </Text>
                   </View>
-                  <Text style={[styles.play, { color: colors.tint }]}>▶</Text>
+                  <Ionicons name="play-circle" size={30} color={colors.tint} />
                 </View>
               </GlassCard>
             </Pressable>
@@ -145,7 +149,7 @@ export function HomeScreen() {
                   {formatDate(w.startedAt)} · {formatVolume(w.totals.volumeKg)}
                 </Text>
               </View>
-              <Text style={[styles.chevron, { color: colors.tertiaryLabel }]}>›</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
             </Pressable>
           ))
         )}
@@ -161,6 +165,7 @@ const styles = StyleSheet.create({
   resumeInner: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, gap: spacing.md },
   resumeTitle: { ...typography.headline },
   resumeMeta: { ...typography.footnote, marginTop: 2 },
+  resumeCtaWrap: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   resumeCta: { ...typography.body, fontWeight: '600' },
   section: { ...typography.title3, marginTop: spacing.lg },
   muted: { ...typography.subhead },

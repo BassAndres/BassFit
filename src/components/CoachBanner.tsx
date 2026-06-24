@@ -7,6 +7,7 @@
  */
 import React, { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -22,11 +23,11 @@ interface CoachBannerProps {
   onDismiss: () => void;
 }
 
-const TONE_GLYPH: Record<OverloadSuggestion['tone'], string> = {
-  success: '↑',
-  warning: '→',
-  danger: '↓',
-  neutral: '＝',
+const TONE_ICON: Record<OverloadSuggestion['tone'], keyof typeof Ionicons.glyphMap> = {
+  success: 'trending-up',
+  warning: 'arrow-forward',
+  danger: 'trending-down',
+  neutral: 'remove',
 };
 
 export function CoachBanner({ suggestion, onDismiss }: CoachBannerProps) {
@@ -63,7 +64,7 @@ export function CoachBanner({ suggestion, onDismiss }: CoachBannerProps) {
       <GlassCard intensity={60} cornerRadius={radius.lg}>
         <Pressable style={styles.row} onPress={onDismiss}>
           <View style={[styles.glyphBubble, { backgroundColor: toneColor }]}>
-            <Text style={styles.glyph}>{TONE_GLYPH[suggestion.tone]}</Text>
+            <Ionicons name={TONE_ICON[suggestion.tone]} size={20} color="#FFFFFF" />
           </View>
           <View style={styles.textCol}>
             <Text style={[styles.title, { color: colors.label }]}>
@@ -76,7 +77,7 @@ export function CoachBanner({ suggestion, onDismiss }: CoachBannerProps) {
               {suggestion.detail}
             </Text>
           </View>
-          <Text style={[styles.close, { color: colors.tertiaryLabel }]}>✕</Text>
+          <Ionicons name="close" size={18} color={colors.tertiaryLabel} />
         </Pressable>
       </GlassCard>
     </Animated.View>

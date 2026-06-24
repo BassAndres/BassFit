@@ -4,6 +4,7 @@
  */
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -43,7 +44,9 @@ export function PRToast({ message, onHide }: PRToastProps) {
     <Animated.View style={[styles.wrap, style]} pointerEvents="none">
       <GlassCard intensity={70} cornerRadius={radius.lg}>
         <View style={styles.row}>
-          <Text style={styles.emoji}>🏆</Text>
+          <View style={[styles.iconWrap, { backgroundColor: colors.warning }]}>
+            <Ionicons name="trophy" size={20} color="#FFFFFF" />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.title, { color: colors.label }]}>¡Récord personal!</Text>
             <Text style={[styles.msg, { color: colors.secondaryLabel }]}>{message}</Text>
@@ -57,7 +60,7 @@ export function PRToast({ message, onHide }: PRToastProps) {
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, gap: spacing.md },
-  emoji: { fontSize: 28 },
+  iconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   title: { ...typography.headline },
   msg: { ...typography.footnote, marginTop: 2 },
 });
