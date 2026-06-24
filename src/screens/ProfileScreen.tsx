@@ -109,6 +109,16 @@ export function ProfileScreen() {
           </View>
         </GlassCard>
 
+        <Pressable onPress={() => navigation.navigate('Records')}>
+          <GlassCard intensity={28} style={styles.linkCard}>
+            <View style={styles.linkInner}>
+              <Ionicons name="trophy-outline" size={22} color={colors.tint} />
+              <Text style={[styles.linkText, { color: colors.label }]}>Récords personales</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
+            </View>
+          </GlassCard>
+        </Pressable>
+
         <Pressable onPress={() => navigation.navigate('Bodyweight')}>
           <GlassCard intensity={28} style={styles.linkCard}>
             <View style={styles.linkInner}>

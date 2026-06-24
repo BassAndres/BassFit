@@ -60,6 +60,8 @@ interface WorkoutState {
 
   startWorkout: (name?: string, routineId?: string) => void;
   startFromRoutine: (routine: Routine) => void;
+  /** Start a new session pre-populated from a past workout's exercises/sets. */
+  startFromWorkout: (workout: Workout) => void;
   renameWorkout: (name: string) => void;
   setWorkoutNote: (note: string) => void;
 
@@ -126,6 +128,32 @@ export const useWorkoutStore = create<WorkoutState>()(
             id: localId('wk'),
             name: routine.name,
             routineId: routine.id,
+            startedAt: Date.now(),
+            exercises,
+          },
+          lastCompletedSet: null,
+        });
+      },
+
+      startFromWorkout: (workout) => {
+        const exercises: WorkoutExercise[] = workout.exercises.map((we) => ({
+          exerciseId: we.exerciseId,
+          exerciseName: we.exerciseName,
+          primaryMuscle: we.primaryMuscle,
+          restSeconds: we.restSeconds,
+          sets: we.sets.map((s, i) => ({
+            ...s,
+            id: localId('set'),
+            setNumber: i + 1,
+            completed: false,
+            completedAt: undefined,
+          })),
+        }));
+        set({
+          current: {
+            id: localId('wk'),
+            name: workout.name,
+            routineId: workout.routineId,
             startedAt: Date.now(),
             exercises,
           },

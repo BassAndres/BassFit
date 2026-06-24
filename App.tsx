@@ -25,6 +25,7 @@ import {
 
 import { RootNavigator } from '@/navigation';
 import { AuthScreen } from '@/screens/AuthScreen';
+import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useCatalogStore } from '@/store/catalogStore';
@@ -33,8 +34,10 @@ import { palettes } from '@/theme';
 export default function App() {
   const system = useColorScheme() === 'dark' ? 'dark' : 'light';
   const themePref = useSettingsStore((s) => s.theme);
+  const accent = useSettingsStore((s) => s.accent);
+  const onboarded = useSettingsStore((s) => s.onboarded);
   const scheme = themePref === 'system' ? system : themePref;
-  const colors = palettes[scheme];
+  const colors = { ...palettes[scheme], tint: accent || palettes[scheme].tint };
 
   const user = useAuthStore((s) => s.user);
   const initializing = useAuthStore((s) => s.initializing);
@@ -71,6 +74,8 @@ export default function App() {
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
                 <ActivityIndicator color={colors.tint} />
               </View>
+            ) : !onboarded ? (
+              <OnboardingScreen />
             ) : user ? (
               <RootNavigator />
             ) : (

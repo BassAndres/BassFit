@@ -16,5 +16,6 @@ export type RootStackParamList = {
   RoutineEditor: { routineId?: string } | undefined;
   ExerciseDetail: { exerciseId: string; exerciseName: string };
   Bodyweight: undefined;
+  Records: undefined;
   Settings: undefined;
 };

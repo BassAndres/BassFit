@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useKeepAwake } from 'expo-keep-awake';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { usePalette, spacing, radius, typography } from '@/theme';
@@ -43,7 +44,7 @@ import { computePRs, type ExercisePR } from '@/services/personalRecords';
 import { formatVolume, formatClock } from '@/utils/format';
 import { unitLabel, formatWeight } from '@/utils/units';
 import type { RootStackParamList } from '@/navigation/types';
-import type { Exercise, WorkoutExercise } from '@/types/models';
+import type { Exercise, WorkoutExercise, SetLog } from '@/types/models';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'LiveWorkout'>;
 
@@ -52,6 +53,7 @@ export function LiveWorkoutTracker() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const haptics = useHaptics();
+  useKeepAwake(); // keep the screen on during a workout
 
   const uid = useAuthStore((s) => s.user?.uid);
   const unit = useSettingsStore((s) => s.unit);
@@ -82,19 +84,31 @@ export function LiveWorkoutTracker() {
   const [saving, setSaving] = useState(false);
   const [prMessage, setPrMessage] = useState<string | null>(null);
   const prsRef = useRef<Map<string, ExercisePR>>(new Map());
+  const lastSetsRef = useRef<Map<string, SetLog[]>>(new Map());
 
   const rest = useRestTimer(() => haptics.success());
 
   const pickerRef = useRef<ExercisePickerSheetRef>(null);
   const plateRef = useRef<PlateCalculatorSheetRef>(null);
 
-  // Load PR baselines once so we can detect new records mid-session.
+  // Load PR baselines + last performance per exercise (for prefill / records).
   useEffect(() => {
     if (!uid) return;
     let active = true;
     listWorkouts(uid, 200)
       .then((ws) => {
-        if (active) prsRef.current = computePRs(ws);
+        if (!active) return;
+        prsRef.current = computePRs(ws);
+        const last = new Map<string, SetLog[]>();
+        for (const w of ws) {
+          for (const ex of w.exercises) {
+            if (!last.has(ex.exerciseId)) {
+              const working = ex.sets.filter((s) => s.type !== 'warmup');
+              if (working.length) last.set(ex.exerciseId, working);
+            }
+          }
+        }
+        lastSetsRef.current = last;
       })
       .catch(() => {});
     return () => {
@@ -105,8 +119,20 @@ export function LiveWorkoutTracker() {
   const onPickExercise = useCallback(
     (exercise: Exercise) => {
       addExercise(exercise);
+      // Prefill with the athlete's last performance of this movement.
+      const last = lastSetsRef.current.get(exercise.id);
+      if (last) {
+        for (const s of last) {
+          addSet(exercise.id, {
+            weightKg: s.weightKg,
+            targetReps: s.targetReps || s.achievedReps,
+            achievedReps: s.achievedReps,
+            rir: s.rir,
+          });
+        }
+      }
     },
-    [addExercise]
+    [addExercise, addSet]
   );
 
   const onAddSet = useCallback(

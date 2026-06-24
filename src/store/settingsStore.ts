@@ -19,6 +19,8 @@ interface SettingsState {
   haptics: boolean;
   /** Bar weight (kg) used by the plate calculator. */
   barWeightKg: number;
+  /** Accent color (hex) overriding the system tint. */
+  accent: string;
   /** Whether the user has seen onboarding. */
   onboarded: boolean;
 
@@ -28,8 +30,12 @@ interface SettingsState {
   setAutoStartRest: (value: boolean) => void;
   setHaptics: (value: boolean) => void;
   setBarWeight: (kg: number) => void;
+  setAccent: (color: string) => void;
   setOnboarded: (value: boolean) => void;
 }
+
+/** Selectable accent presets (premium tint options). */
+export const ACCENT_PRESETS = ['#0A84FF', '#30D158', '#FF9F0A', '#FF375F', '#BF5AF2', '#64D2FF'] as const;
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -40,6 +46,7 @@ export const useSettingsStore = create<SettingsState>()(
       autoStartRest: true,
       haptics: true,
       barWeightKg: 20,
+      accent: '#0A84FF',
       onboarded: false,
 
       setUnit: (unit) => set({ unit }),
@@ -48,6 +55,7 @@ export const useSettingsStore = create<SettingsState>()(
       setAutoStartRest: (autoStartRest) => set({ autoStartRest }),
       setHaptics: (haptics) => set({ haptics }),
       setBarWeight: (barWeightKg) => set({ barWeightKg }),
+      setAccent: (accent) => set({ accent }),
       setOnboarded: (onboarded) => set({ onboarded }),
     }),
     {

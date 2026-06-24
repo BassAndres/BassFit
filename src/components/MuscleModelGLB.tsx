@@ -7,7 +7,7 @@
  * it falls back to the procedural 3D model (MuscleModel3D). The caller also
  * wraps this in an ErrorBoundary that drops to the 2D MuscleMap as a last resort.
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { View } from 'react-native';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
@@ -16,6 +16,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
 import { MuscleModel3D } from './MuscleModel3D';
+import { useModelRotation } from '@/hooks/useModelRotation';
 import { MUSCLE_MODELS } from '@/data/muscleModels';
 import type { MuscleGroup } from '@/types/models';
 
@@ -40,10 +41,19 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-function RotatingModel({ object }: { object: THREE.Object3D }) {
+function RotatingModel({
+  object,
+  rotationRef,
+  draggingRef,
+}: {
+  object: THREE.Object3D;
+  rotationRef: MutableRefObject<number>;
+  draggingRef: MutableRefObject<boolean>;
+}) {
   const ref = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y += delta * 0.55;
+    if (!draggingRef.current) rotationRef.current += delta * 0.55;
+    if (ref.current) ref.current.rotation.y = rotationRef.current;
   });
   return (
     <group ref={ref}>
@@ -61,6 +71,7 @@ interface Props {
 export function MuscleModelGLB({ primary, secondary = [], height = 240 }: Props) {
   const [object, setObject] = useState<THREE.Object3D | null>(null);
   const [failed, setFailed] = useState(false);
+  const { panHandlers, rotation, dragging } = useModelRotation();
 
   useEffect(() => {
     let alive = true;
@@ -100,12 +111,12 @@ export function MuscleModelGLB({ primary, secondary = [], height = 240 }: Props)
   if (failed) return <MuscleModel3D primary={primary} secondary={secondary} height={height} />;
 
   return (
-    <View style={{ height }}>
+    <View style={{ height }} {...panHandlers}>
       <Canvas camera={{ position: [0, 0, 3.6], fov: 45 }} gl={{ alpha: true }} style={{ backgroundColor: 'transparent' }}>
         <ambientLight intensity={0.9} />
         <directionalLight position={[2, 4, 5]} intensity={1.1} />
         <directionalLight position={[-3, 2, -3]} intensity={0.45} />
-        {object && <RotatingModel object={object} />}
+        {object && <RotatingModel object={object} rotationRef={rotation} draggingRef={dragging} />}
       </Canvas>
     </View>
   );

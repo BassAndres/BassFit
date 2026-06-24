@@ -7,11 +7,12 @@
  * device can't provide a GL context, the caller's ErrorBoundary falls back to
  * the 2D MuscleMap.
  */
-import React, { useRef } from 'react';
+import React, { useRef, type MutableRefObject } from 'react';
 import { View } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { usePalette } from '@/theme';
+import { useModelRotation } from '@/hooks/useModelRotation';
 import type { MuscleGroup } from '@/types/models';
 
 type Vec3 = [number, number, number];
@@ -161,14 +162,19 @@ function Mannequin({
   primary,
   secondary,
   accent,
+  rotationRef,
+  draggingRef,
 }: {
   primary: MuscleGroup;
   secondary: MuscleGroup[];
   accent: string;
+  rotationRef: MutableRefObject<number>;
+  draggingRef: MutableRefObject<boolean>;
 }) {
   const group = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
-    if (group.current) group.current.rotation.y += delta * 0.55;
+    if (!draggingRef.current) rotationRef.current += delta * 0.55;
+    if (group.current) group.current.rotation.y = rotationRef.current;
   });
 
   const isFull = primary === 'fullBody';
@@ -195,8 +201,9 @@ interface MuscleModel3DProps {
 
 export function MuscleModel3D({ primary, secondary = [], height = 240 }: MuscleModel3DProps) {
   const { colors } = usePalette();
+  const { panHandlers, rotation, dragging } = useModelRotation();
   return (
-    <View style={{ height }}>
+    <View style={{ height }} {...panHandlers}>
       <Canvas
         camera={{ position: [0, 0, 3.6], fov: 45 }}
         gl={{ alpha: true }}
@@ -205,7 +212,13 @@ export function MuscleModel3D({ primary, secondary = [], height = 240 }: MuscleM
         <ambientLight intensity={0.9} />
         <directionalLight position={[2, 4, 5]} intensity={1.1} />
         <directionalLight position={[-3, 2, -3]} intensity={0.45} />
-        <Mannequin primary={primary} secondary={secondary} accent={colors.tint} />
+        <Mannequin
+          primary={primary}
+          secondary={secondary}
+          accent={colors.tint}
+          rotationRef={rotation}
+          draggingRef={dragging}
+        />
       </Canvas>
     </View>
   );

@@ -97,7 +97,7 @@ export function ExerciseDetailScreen() {
               <MuscleModelGLB primary={exercise.primaryMuscle} secondary={exercise.secondaryMuscles} />
             </ErrorBoundary>
             <Text style={[styles.caption, { color: colors.tertiaryLabel }]}>
-              Modelo 3D (.glb) — el músculo trabajado se ilumina y gira automáticamente
+              Modelo 3D (.glb) — el músculo se ilumina; gira solo o arrástralo con el dedo
             </Text>
             <View style={styles.legend}>
               <View style={styles.legendItem}>

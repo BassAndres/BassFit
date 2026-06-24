@@ -117,6 +117,9 @@ export const typography = {
 export function usePalette(): { scheme: ColorScheme; colors: Palette } {
   const system = useColorScheme() === 'dark' ? 'dark' : 'light';
   const preference = useSettingsStore((s) => s.theme);
+  const accent = useSettingsStore((s) => s.accent);
   const scheme: ColorScheme = preference === 'system' ? system : preference;
-  return { scheme, colors: palettes[scheme] };
+  const base = palettes[scheme];
+  const colors = accent && accent !== base.tint ? { ...base, tint: accent } : base;
+  return { scheme, colors };
 }

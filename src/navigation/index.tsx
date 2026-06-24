@@ -12,10 +12,12 @@
  */
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { usePalette } from '@/theme';
+import { useSettingsStore } from '@/store/settingsStore';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { HistoryScreen } from '@/screens/HistoryScreen';
 import { ExercisesScreen } from '@/screens/ExercisesScreen';
@@ -27,6 +29,7 @@ import { ExerciseDetailScreen } from '@/screens/ExerciseDetailScreen';
 import { RoutineEditorScreen } from '@/screens/RoutineEditorScreen';
 import { BodyweightScreen } from '@/screens/BodyweightScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
+import { RecordsScreen } from '@/screens/RecordsScreen';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -44,6 +47,11 @@ function Tabs() {
   const { colors } = usePalette();
   return (
     <Tab.Navigator
+      screenListeners={{
+        tabPress: () => {
+          if (useSettingsStore.getState().haptics) Haptics.selectionAsync();
+        },
+      }}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.tint,
@@ -74,6 +82,7 @@ export function RootNavigator() {
       <Stack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} />
       <Stack.Screen name="RoutineEditor" component={RoutineEditorScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Bodyweight" component={BodyweightScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="Records" component={RecordsScreen} options={{ presentation: 'card' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ presentation: 'modal' }} />
     </Stack.Navigator>
   );

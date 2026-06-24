@@ -11,6 +11,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { usePalette, spacing, typography } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useWorkoutStore } from '@/store/workoutStore';
 import { getWorkout, deleteWorkout } from '@/services/workoutRepository';
 import { formatDate, formatDuration, formatVolume } from '@/utils/format';
 import { formatWeight } from '@/utils/units';
@@ -27,6 +28,7 @@ export function WorkoutDetailScreen() {
   const { params } = useRoute<Rt>();
   const uid = useAuthStore((s) => s.user?.uid);
   const unit = useSettingsStore((s) => s.unit);
+  const startFromWorkout = useWorkoutStore((s) => s.startFromWorkout);
 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,6 +103,14 @@ export function WorkoutDetailScreen() {
         </GlassCard>
       ))}
 
+      <PrimaryButton
+        label="Repetir entrenamiento"
+        onPress={() => {
+          startFromWorkout(workout);
+          navigation.navigate('LiveWorkout');
+        }}
+        style={styles.repeat}
+      />
       <PrimaryButton label="Eliminar entrenamiento" variant="destructive" onPress={onDelete} style={styles.delete} />
       <PrimaryButton label="Volver" variant="tinted" onPress={() => navigation.goBack()} />
     </ScrollView>
@@ -120,5 +130,6 @@ const styles = StyleSheet.create({
   setNo: { width: 20, ...typography.subhead, fontWeight: '600' },
   setVal: { ...typography.body, fontWeight: '600', minWidth: 110 },
   setMeta: { ...typography.footnote, flex: 1 },
-  delete: { marginTop: spacing.lg },
+  repeat: { marginTop: spacing.lg },
+  delete: { marginTop: spacing.sm },
 });
