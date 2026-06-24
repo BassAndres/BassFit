@@ -33,7 +33,7 @@ export function HomeScreen() {
   const startFromRoutine = useWorkoutStore((s) => s.startFromRoutine);
 
   const [routines, setRoutines] = useState<Routine[]>([]);
-  const [recent, setRecent] = useState<Workout[]>([]);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -42,11 +42,11 @@ export function HomeScreen() {
       const uid = user?.uid;
       if (!uid) return;
       setLoading(true);
-      Promise.all([listRoutines(uid), listWorkouts(uid, 5)])
+      Promise.all([listRoutines(uid), listWorkouts(uid, 60)])
         .then(([r, w]) => {
           if (!active) return;
           setRoutines(r);
-          setRecent(w);
+          setWorkouts(w);
         })
         .catch(() => {})
         .finally(() => active && setLoading(false));
@@ -55,6 +55,20 @@ export function HomeScreen() {
       };
     }, [user?.uid])
   );
+
+  const recent = workouts.slice(0, 5);
+
+  // Last 7 days: which were trained, and how many sessions.
+  const today = new Date();
+  const dayLabels = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i));
+    const key = d.toDateString();
+    const trained = workouts.some((w) => new Date(w.startedAt).toDateString() === key);
+    return { label: dayLabels[d.getDay()] ?? '', trained, isToday: i === 6 };
+  });
+  const sessionsThisWeek = week.filter((d) => d.trained).length;
 
   const beginEmpty = () => {
     const launch = () => {
@@ -84,6 +98,35 @@ export function HomeScreen() {
     <Screen title="Inicio">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={[styles.greeting, { color: colors.secondaryLabel }]}>{greeting}</Text>
+
+        <GlassCard intensity={28} style={styles.weekCard}>
+          <View style={styles.weekInner}>
+            <View style={styles.weekHeader}>
+              <Text style={[styles.weekTitle, { color: colors.label }]}>Esta semana</Text>
+              <Text style={[styles.weekCount, { color: colors.tint }]}>
+                {sessionsThisWeek} {sessionsThisWeek === 1 ? 'día' : 'días'}
+              </Text>
+            </View>
+            <View style={styles.weekDots}>
+              {week.map((d, i) => (
+                <View key={i} style={styles.weekDay}>
+                  <View
+                    style={[
+                      styles.weekDot,
+                      {
+                        backgroundColor: d.trained ? colors.tint : colors.surfaceSecondary,
+                        borderColor: d.isToday ? colors.tint : 'transparent',
+                      },
+                    ]}
+                  >
+                    {d.trained && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                  </View>
+                  <Text style={[styles.weekDayLabel, { color: colors.tertiaryLabel }]}>{d.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </GlassCard>
 
         {active && (
           <Pressable onPress={() => navigation.navigate('LiveWorkout')}>
@@ -161,6 +204,15 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxxl },
   greeting: { ...typography.body },
+  weekCard: {},
+  weekInner: { padding: spacing.lg, gap: spacing.md },
+  weekHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  weekTitle: { ...typography.headline },
+  weekCount: { ...typography.headline, fontWeight: '700' },
+  weekDots: { flexDirection: 'row', justifyContent: 'space-between' },
+  weekDay: { alignItems: 'center', gap: spacing.xs },
+  weekDot: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  weekDayLabel: { ...typography.caption },
   resumeCard: {},
   resumeInner: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, gap: spacing.md },
   resumeTitle: { ...typography.headline },
