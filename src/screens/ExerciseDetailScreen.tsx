@@ -15,7 +15,7 @@ import { StatPill } from '@/components/StatPill';
 import { BarChart, type BarDatum } from '@/components/BarChart';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { MuscleMap } from '@/components/MuscleMap';
-import { MuscleModel3D } from '@/components/MuscleModel3D';
+import { MuscleModelGLB } from '@/components/MuscleModelGLB';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { usePalette, spacing, typography } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
@@ -94,10 +94,10 @@ export function ExerciseDetailScreen() {
             <ErrorBoundary
               fallback={<MuscleMap primary={exercise.primaryMuscle} secondary={exercise.secondaryMuscles} />}
             >
-              <MuscleModel3D primary={exercise.primaryMuscle} secondary={exercise.secondaryMuscles} />
+              <MuscleModelGLB primary={exercise.primaryMuscle} secondary={exercise.secondaryMuscles} />
             </ErrorBoundary>
             <Text style={[styles.caption, { color: colors.tertiaryLabel }]}>
-              Modelo 3D — el músculo trabajado se ilumina y gira automáticamente
+              Modelo 3D (.glb) — el músculo trabajado se ilumina y gira automáticamente
             </Text>
             <View style={styles.legend}>
               <View style={styles.legendItem}>

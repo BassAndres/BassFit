@@ -96,7 +96,24 @@ src/
   navigation/                  # Root stack + bottom tabs
 ```
 
-### Modelo de datos Firestore (NoSQL)
+### Modelos 3D (.glb)
+
+El pack de modelos vive en `assets/models/<músculo>.glb` (uno por grupo
+muscular, con ese músculo resaltado). Se cargan en runtime con expo-asset +
+three `GLTFLoader` y se renderizan girando con expo-gl / React Three Fiber
+(`MuscleModelGLB`), con doble fallback: modelo procedural 3D y, por último, el
+mapa 2D en SVG. Metro empaqueta `.glb` gracias a `metro.config.js`.
+
+Para regenerar el pack (geometría procedural, sin assets externos):
+
+```bash
+npm i -D @gltf-transform/core
+node scripts/generate-models.js ./assets/models
+```
+
+El icono (pesa + bajo) se regenera con `node scripts/generate-icon.js ./assets`
+(requiere `npm i -D @resvg/resvg-js`).
+
 
 ```
 exercises/{exerciseId}                 # catálogo global compartido
